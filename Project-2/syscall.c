@@ -103,6 +103,9 @@ extern int sys_unlink(void);
 extern int sys_wait(void);
 extern int sys_write(void);
 extern int sys_uptime(void);
+extern int sys_gettsched(void);
+extern int sys_yieldc(void);
+extern int sys_getcycles1(void);
 
 static int (*syscalls[])(void) = {
 [SYS_fork]    sys_fork,
@@ -126,6 +129,10 @@ static int (*syscalls[])(void) = {
 [SYS_link]    sys_link,
 [SYS_mkdir]   sys_mkdir,
 [SYS_close]   sys_close,
+[SYS_gettsched] sys_gettsched,
+[SYS_yieldc]   sys_yieldc,
+[SYS_getcycles1]   sys_getcycles1,
+
 };
 
 void

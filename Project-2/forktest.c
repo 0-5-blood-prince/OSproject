@@ -5,7 +5,7 @@
 #include "stat.h"
 #include "user.h"
 
-#define N  1000
+#define N  60
 
 void
 printf(int fd, const char *s, ...)
@@ -19,16 +19,22 @@ forktest(void)
   int n, pid;
 
   printf(1, "fork test\n");
-
+  int a = gettsched();
   for(n=0; n<N; n++){
     pid = fork();
     if(pid < 0)
       break;
     if(pid == 0)
+    {
+      int i=1;
+      while(i>0){i--;}
       exit();
+    }
   }
-
+  int b = gettsched();
+  printf(1,"sched time %d\n",b-a);
   if(n == N){
+
     printf(1, "fork claimed to work N times!\n", N);
     exit();
   }
@@ -44,7 +50,7 @@ forktest(void)
     printf(1, "wait got too many\n");
     exit();
   }
-
+   
   printf(1, "fork test OK\n");
 }
 

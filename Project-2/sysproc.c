@@ -12,7 +12,22 @@ sys_fork(void)
 {
   return fork();
 }
-
+int 
+sys_gettsched(void)
+{
+   return gettsched();
+}
+int sys_yieldc(void)
+{
+  yield();
+  return 0;
+}
+int sys_getcycles1(void)
+{
+  int pid;
+  argint(0,&pid);
+  return getcycles1(pid);
+}
 int
 sys_exit(void)
 {

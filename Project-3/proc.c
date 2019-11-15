@@ -454,7 +454,7 @@ scheduler(void)
       c->proc = p;
       switchuvm(p);
       p->state = RUNNING;
-      cprintf("%d\n",p->num_tickets);
+      // cprintf("%d\n",p->num_tickets);
       int tick_prev = ticks;
 
       swtch(&(c->scheduler), p->context);

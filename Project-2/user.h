@@ -23,6 +23,9 @@ int getpid(void);
 char* sbrk(int);
 int sleep(int);
 int uptime(void);
+int gettsched(void);
+int yieldc(void);
+int getcycles1(int);
 
 // ulib.c
 int stat(const char*, struct stat*);

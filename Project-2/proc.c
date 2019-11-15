@@ -14,7 +14,7 @@ struct {
   struct proc* TAIL;
 } ptable;
 
-
+int time_sched=0;
 static struct proc *initproc;
 
 int nextpid = 1;
@@ -66,6 +66,11 @@ myproc(void) {
   p = c->proc;
   popcli();
   return p;
+}
+int gettsched(void)
+{
+    cprintf("%d\n",ticks);
+    return time_sched;
 }
 
 //PAGEBREAK: 32
@@ -178,6 +183,26 @@ growproc(int n)
   curproc->sz = sz;
   switchuvm(curproc);
   return 0;
+}
+int  getcycles1(int pid)
+{
+  /*TODO
+    return proc _ticks
+  */
+
+  acquire(&ptable.lock);
+  for(struct proc* p=ptable.proc; p!=&(ptable.proc[NPROC]); p++)
+  {
+    if(p->pid == pid)
+      {
+ 
+        release(&ptable.lock);
+        return p->cycles;
+      }
+  }
+  release(&ptable.lock);
+  panic("cannot find pid");
+  return -1;
 }
 
 // Create a new process copying p as the parent.
@@ -339,6 +364,7 @@ scheduler(void)
   struct proc *p;
   struct cpu *c = mycpu();
   c->proc = 0;
+  int start_ticks = ticks;
   for(;;){
     // Enable interrupts on this processor.
     sti();
@@ -349,13 +375,30 @@ scheduler(void)
     //   if(p->state != RUNNABLE)
     //     continue;
     p=ptable.TAIL;
+    // if(p!=0)
+    // cprintf("%d main is pid\n",p->pid);
+
       // Switch to chosen process.  It is the process's job
       // to release ptable.lock and then reacquire it
       // before jumping back to us.
       //cprintf("hi");
-    if(p!=0)
+    if(p!=0 && p->state != RUNNABLE)
     {
-     
+      ptable.TAIL=ptable.TAIL->prev;      
+      if(ptable.TAIL!=0){
+        ptable.TAIL->next=0;
+      }
+      else{
+        ptable.HEAD=0;
+      }
+      // cprintf("%d iis pid\n",p->state);
+      release(&ptable.lock);
+      continue;
+    }
+
+    if (p!=0 && p->state == RUNNABLE)
+    {
+      // cprintf("%d is pid\n",p->state);
       ptable.TAIL=ptable.TAIL->prev;
       if(ptable.TAIL!=0){
       	ptable.TAIL->next=0;
@@ -363,16 +406,20 @@ scheduler(void)
       else{
       	ptable.HEAD=0;
       }
+      int end_ticks=ticks;
+      time_sched+=(end_ticks-start_ticks);
+     // cprintf("%d\n",time_sched);
       c->proc = p;
       switchuvm(p);
       p->state = RUNNING;
-
+      int tick_prev = ticks;
       swtch(&(c->scheduler), p->context);
       switchkvm();
-
+      p->cycles+=ticks-tick_prev;
       // Process is done running for now.
       // It should have changed its p->state before coming back.
       c->proc = 0;
+      start_ticks=ticks;
     }
     // }
     release(&ptable.lock);
@@ -501,15 +548,15 @@ wakeup1(void *chan)
     {
       p->state = RUNNABLE;
 
-        if(ptable.HEAD==0){
-            ptable.HEAD=p;
-            ptable.TAIL=p;
-        }
-        else{
-            p->next=ptable.HEAD;
-            ptable.HEAD->prev=p;
-            ptable.HEAD=p;
-        }    
+      if(ptable.HEAD==0){
+          ptable.HEAD=p;
+          ptable.TAIL=p;
+      }
+      else{
+          p->next=ptable.HEAD;
+          ptable.HEAD->prev=p;
+          ptable.HEAD=p;
+      }    
     }
   }
 

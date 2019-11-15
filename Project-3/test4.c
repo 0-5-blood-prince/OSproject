@@ -70,7 +70,7 @@ void master_test(int n_proc)
         wait();    
     for(i=0;i<n_proc;i++)
     {
-        printf(1,"%d,%d,%d\n",i,calculate_tickets(i),ticks_curr[i]-ticks_prev[i]);
+        // printf(1,"%d,%d,%d\n",i,calculate_tickets(i),ticks_curr[i]-ticks_prev[i]);
         ticks_stat[i]+=ticks_curr[i]-ticks_prev[i];
 
     }    
@@ -79,7 +79,7 @@ void master_test(int n_proc)
 
 int main()
 {
-    int repeat=1;
+    int repeat=10;
     int i;
     for(i=0;i<N_PROC;i++)
         ticks_stat[i]=0;
