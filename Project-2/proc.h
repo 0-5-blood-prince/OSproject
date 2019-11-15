@@ -41,7 +41,7 @@ struct proc {
   struct proc* prev;
   pde_t* pgdir;                // Page table
   char *kstack;                // Bottom of kernel stack for this process
-  int cycles;
+  int cycles;                  // stores the ticks  on cpu
   enum procstate state;        // Process state
   int pid;                     // Process ID
   struct proc *parent;         // Parent process

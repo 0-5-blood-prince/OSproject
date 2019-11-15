@@ -13,10 +13,6 @@ struct {
   struct spinlock lock;
   struct proc proc[NPROC];
 } ptable;
-
-
-
-
 int
 uptime(void)
 {
@@ -153,7 +149,7 @@ userinit(void)
   p->tf->eflags = FL_IF;
   p->tf->esp = PGSIZE;
   p->tf->eip = 0;  // beginning of initcode.S
-  p->num_tickets = 2;
+  p->num_tickets = 1;
   safestrcpy(p->name, "initcode", sizeof(p->name));
   p->cwd = namei("/");
 
@@ -217,7 +213,9 @@ fork(void)
 
   // Clear %eax so that fork returns 0 in the child.
   np->tf->eax = 0;
+
   np->num_tickets = 1;
+  
   for(i = 0; i < NOFILE; i++)
     if(curproc->ofile[i])
       np->ofile[i] = filedup(curproc->ofile[i]);
@@ -283,10 +281,7 @@ forkt(int t)
 
 int  getcycles1(int pid)
 {
-  /*TODO
-    return proc _ticks
-  */
-
+  
   acquire(&ptable.lock);
   for(struct proc* p=ptable.proc; p!=&(ptable.proc[NPROC]); p++)
   {
@@ -298,7 +293,7 @@ int  getcycles1(int pid)
       }
   }
   release(&ptable.lock);
-  panic("cannot find pid");
+  //panic("cannot find pid");
   return -1;
 }
 
@@ -439,12 +434,15 @@ scheduler(void)
     int total_num_tickets = totaltickets();
     if(total_num_tickets >0){
      int winner=randomGen(total_num_tickets);
+
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-      // cprintf("%d%d\n",winner,total_num_tickets );
       if (p->state == RUNNABLE) {
+
           winner = winner - p->num_tickets;
+        
         } 
-        if(p->state != RUNNABLE || winner >= 0) {
+        if(p->state != RUNNABLE || winner >= 0){
+
           continue;
         }
 

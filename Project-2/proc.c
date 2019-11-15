@@ -70,6 +70,7 @@ myproc(void) {
 int gettsched(void)
 {
     cprintf("%d\n",ticks);
+    time_sched=0;
     return time_sched;
 }
 
@@ -245,7 +246,7 @@ fork(void)
 
   acquire(&ptable.lock);
 
-  np->state = RUNNABLE;
+  np->state = RUNNABLE;         
   if(ptable.HEAD==0){
     ptable.HEAD=np;
     ptable.TAIL=np;
@@ -364,64 +365,49 @@ scheduler(void)
   struct proc *p;
   struct cpu *c = mycpu();
   c->proc = 0;
-  int start_ticks = ticks;
   for(;;){
     // Enable interrupts on this processor.
     sti();
 
     // Loop over process table looking for process to run.
     acquire(&ptable.lock);
-    // for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-    //   if(p->state != RUNNABLE)
-    //     continue;
+
     p=ptable.TAIL;
-    // if(p!=0)
-    // cprintf("%d main is pid\n",p->pid);
 
       // Switch to chosen process.  It is the process's job
       // to release ptable.lock and then reacquire it
       // before jumping back to us.
-      //cprintf("hi");
-    if(p!=0 && p->state != RUNNABLE)
-    {
-      ptable.TAIL=ptable.TAIL->prev;      
-      if(ptable.TAIL!=0){
-        ptable.TAIL->next=0;
-      }
-      else{
-        ptable.HEAD=0;
-      }
-      // cprintf("%d iis pid\n",p->state);
-      release(&ptable.lock);
-      continue;
-    }
 
     if (p!=0 && p->state == RUNNABLE)
     {
-      // cprintf("%d is pid\n",p->state);
-      ptable.TAIL=ptable.TAIL->prev;
-      if(ptable.TAIL!=0){
-      	ptable.TAIL->next=0;
-      }
-      else{
-      	ptable.HEAD=0;
-      }
-      int end_ticks=ticks;
-      time_sched+=(end_ticks-start_ticks);
-     // cprintf("%d\n",time_sched);
+
+
+    	if(ptable.HEAD==ptable.TAIL)
+    	{
+    		ptable.HEAD=0;
+    		ptable.TAIL=0;	
+    	}
+    	else
+    	{
+    		ptable.TAIL=ptable.TAIL->prev;
+    		ptable.TAIL->next=0;
+    		p->prev=0;
+    	}
+
       c->proc = p;
       switchuvm(p);
       p->state = RUNNING;
+
       int tick_prev = ticks;
+
       swtch(&(c->scheduler), p->context);
       switchkvm();
+      
       p->cycles+=ticks-tick_prev;
       // Process is done running for now.
       // It should have changed its p->state before coming back.
       c->proc = 0;
-      start_ticks=ticks;
     }
-    // }
     release(&ptable.lock);
 
   }

@@ -348,9 +348,18 @@ scheduler(void)
       // Switch to chosen process.  It is the process's job
       // to release ptable.lock and then reacquire it
       // before jumping back to us.
-    if(p!=0)
+    if(p!=0 &&p->state!=3)//dosent go into this
+    {
+    	ptable.HEAD=ptable.HEAD->next;
+    	release(&ptable.lock);
+    	continue;
+    }
+
+
+    if(p!=0 && p->state==RUNNABLE)
     {
       ptable.HEAD=ptable.HEAD->next;
+      //removing HEAD of the runnable list
       c->proc = p;
       switchuvm(p);
       p->state = RUNNING;
